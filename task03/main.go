@@ -71,21 +71,52 @@ import (
 )
 
 // TODO: напиши функцию worker(id int, jobs <-chan int, results chan<- string, wg *sync.WaitGroup)
+func worker(id int, jobs <-chan int, results chan<- string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for job := range jobs {
+		results <- fmt.Sprintf("воркер %d: %d^2 = %d", id, job, job*job)
+	}
+}
 
 func main() {
 	// TODO: объяви WaitGroup ЛОКАЛЬНО здесь
 	var wg sync.WaitGroup
+	// 	var wg2 sync.WaitGroup
 
 	// TODO: создай каналы jobs и results
+	jobs := make(chan (int), 10)
+	results := make(chan (string), 10)
 
 	// TODO: запусти 3 воркера, передавая &wg
+	for i := range 3 {
+		wg.Add(1)
+		go worker(i, jobs, results, &wg)
+	}
 
 	// TODO: закинь задачи 1..10 в jobs и закрой jobs
-
+	for i := range 10 {
+		// wg2.Add(1)
+		// go func() {
+		//	defer wg2.Done()
+		jobs <- i
+		//}()
+	}
+	close(jobs)
+	/*
+		go func() {
+			wg2.Wait()
+			close(jobs)
+		}()
+	*/
 	// TODO: запусти горутину которая после wg.Wait() закрывает results
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
 
 	// TODO: выведи все результаты из results через range
-
-	_ = fmt.Println
-	_ = wg // убери когда начнёшь использовать
+	for i := range results {
+		fmt.Println(i)
+	}
 }
