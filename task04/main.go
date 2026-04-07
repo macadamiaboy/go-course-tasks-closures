@@ -42,12 +42,40 @@ import (
 )
 
 // TODO: напиши функцию withLogging(fn func(int) int, name string) func(int) int
+func withLogging(fn func(int) int, name string) func(int) int {
+	return func(n int) int {
+		fmt.Printf("вызов %s(%d)\n", name, n)
+		result := fn(n)
+		fmt.Printf("%s(%d) = %d\n", name, n, result)
+		return result
+	}
+}
 
 // TODO: напиши функцию withRetry(fn func() error, attempts int) func() error
+func withRetry(fn func() error, attempts int) func() error {
+	return func() error {
+		var err error
+		for i := range attempts {
+			if err = fn(); err != nil {
+				fmt.Printf("попытка %d не удалась: %s\n", i, err)
+				continue
+			}
+			fmt.Printf("успех на попытке %d\n", i)
+			return nil
+		}
+		return err
+	}
+}
 
 func main() {
 	// TODO: создай функцию square := func(n int) int { return n * n }
 	// Оберни её через withLogging и вызови несколько раз
+	square := func(n int) int { return n * n }
+	wrapped := withLogging(square, "square")
+
+	fmt.Println(wrapped(2))
+	fmt.Println(wrapped(4))
+	fmt.Println(wrapped(5))
 
 	// TODO: создай счётчик попыток
 	// attempt := 0
@@ -61,7 +89,19 @@ func main() {
 	//       return nil
 	//   }
 	// Оберни через withRetry(unstable, 5) и вызови
+	attempt := 0
+	unstable := func() error {
+		attempt++
+		if attempt < 3 {
+			return errors.New("not available")
+		}
+		return nil
+	}
 
-	_ = fmt.Println
-	_ = errors.New // убери когда начнёшь использовать
+	toCall := withRetry(unstable, 2)
+	fmt.Println(toCall())
+
+	attempt = 0
+	toCall = withRetry(unstable, 4)
+	fmt.Println(toCall())
 }

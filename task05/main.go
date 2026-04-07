@@ -74,7 +74,9 @@ func main() {
 			go func() {
 				defer wg.Done()
 				// TODO: выведи i
+				fmt.Println(i)
 				// Вопрос: какое значение здесь будет?
+				// корректное, стоит 1.26)
 			}()
 		}
 		wg.Wait()
@@ -87,7 +89,10 @@ func main() {
 		for i := 0; i < 5; i++ {
 			wg.Add(1)
 			// TODO: go func(n int) { ... }(i)
-			_ = wg // убери
+			go func(n int) {
+				defer wg.Done()
+				fmt.Println(n)
+			}(i)
 		}
 		wg.Wait()
 	}
@@ -99,10 +104,12 @@ func main() {
 		for i := 0; i < 5; i++ {
 			wg.Add(1)
 			// TODO: n := i; go func() { ... }()
-			_ = wg // убери
+			n := i
+			go func() {
+				wg.Done()
+				fmt.Println(n)
+			}()
 		}
 		wg.Wait()
 	}
-
-	_ = fmt.Println
 }
